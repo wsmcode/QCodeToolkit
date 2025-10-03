@@ -1,0 +1,37 @@
+<RCC>
+    <qresource prefix="/">
+        <file>res/icon/category.svg</file>
+        <file>res/icon/close.svg</file>
+        <file>res/icon/code.svg</file>
+        <file>res/icon/codenote.svg</file>
+        <file>res/icon/down-arrow.svg</file>
+        <file>res/icon/log.svg</file>
+        <file>res/icon/max.svg</file>
+        <file>res/icon/min.svg</file>
+        <file>res/icon/pin.svg</file>
+        <file>res/icon/pin-off.svg</file>
+        <file>res/icon/restore.svg</file>
+        <file>res/icon/search.svg</file>
+        <file>res/icon/set.svg</file>
+        <file>res/icon/up-arrow.svg</file>
+        <file>res/style/dark_theme.qss</file>
+        <file>res/style/light_theme.qss</file>
+        <file>res/icon/close-light.svg</file>
+        <file>res/icon/down-arrow-light.svg</file>
+        <file>res/icon/category-light.svg</file>
+        <file>res/icon/codenote-light.svg</file>
+        <file>res/icon/check.svg</file>
+        <file>res/icon/check-light.svg</file>
+        <file>res/icon/down-solid.svg</file>
+        <file>res/icon/down-solid-light.svg</file>
+        <file>res/icon/up-arrow-light.svg</file>
+        <file>res/icon/up-solid.svg</file>
+        <file>res/icon/up-solid-light.svg</file>
+        <file>res/style/editor_style.conf</file>
+        <file>res/icon/tags.svg</file>
+        <file>res/icon/theme-light-dark.svg</file>
+        <file>res/icon/refresh.svg</file>
+        <file>res/icon/refresh-light.svg</file>
+        <file>app.ico</file>
+    </qresource>
+</RCC>
