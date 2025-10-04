@@ -17,7 +17,6 @@ CodeEditor::CodeEditor(QWidget *parent) : QsciScintilla(parent)
     setContextMenuPolicy(Qt::NoContextMenu); // 禁用默认右键菜单，使用自定义菜单
     setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-
     setConfig(defaultConfig());
 
     QObject::connect(this, &CodeEditor::marginClicked, [=](int margin, int line, Qt::KeyboardModifiers){
@@ -70,6 +69,17 @@ void CodeEditor::setConfig(const EditorConfig &config)
     // ==== 设置颜色主题 ====
     setColor(config.foregroundColor); // 设置默认文本颜色
     setPaper(config.backgroundColor); // 设置编辑器背景色
+
+    // ==== 设置光标颜色 ==== 后续需改成conf文件设置
+    if(config.backgroundColor == Qt::white) setCaretForegroundColor("#000000");
+    else setCaretForegroundColor("#aeafad");
+    setCaretWidth(2); // 设置光标宽度
+
+    QString style = QString(R"(QListView { background-color: %1; })").arg(config.backgroundColor.name());
+    setStyleSheet(style);
+
+//    setCaretLineVisible(true); // 启用当前行高亮
+//    setCaretLineBackgroundColor(QColor("gainsboro")); // 当前行背景色
 
     // ==== 设置边距 ====
     setupMargins(config);
@@ -343,6 +353,9 @@ void CodeEditor::setupLexer(const Language &language)
     // 应用字体和语法高亮
     newLexer->setFont(m_config.font);
     m_languageSpec->applySyntaxHighlighting(newLexer, m_config.syntaxHighlighting);
+
+    newLexer->setDefaultPaper(m_config.backgroundColor);
+    newLexer->setPaper(m_config.backgroundColor);
 
     setLexer(newLexer);
     m_lexer = newLexer;

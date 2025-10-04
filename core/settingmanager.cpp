@@ -224,7 +224,7 @@ void SettingManager::loadEditorSettings(EditorSet &settings)
 {
     // 编辑器设置
     settings.scrollFollow = m_settings->value("editor/scrollFollow", false).toBool();
-    settings.scrollSpeed = m_settings->value("editor/scrollSpeed", 1).toInt();
+    settings.scrollSpeed = QString(m_settings->value("editor/scrollSpeed", 1).toInt());
     settings.saveOnClose = m_settings->value("editor/saveOnClose", true).toBool();
     settings.autoSave = m_settings->value("editor/autoSave", false).toBool();
 }
