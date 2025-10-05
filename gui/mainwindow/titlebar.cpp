@@ -13,6 +13,7 @@
 #include <QMouseEvent>
 #include <QStyle>
 #include <QApplication>
+#include <QFileInfo>
 
 TitleBar::TitleBar(QWidget *parent) : QWidget(parent)
 {
@@ -150,7 +151,7 @@ void TitleBar::createDockingPreview()
 }
 
 // svg图片渲染，颜色目前不支持透明通道
-QIcon TitleBar::renderSvgIcon(const QString &path, const QSize &size, const QColor &color)
+QIcon TitleBar::renderIcon(const QString &path, const QSize &size, const QColor &color)
 {
     // 获取设备像素比
     const qreal dpr = devicePixelRatioF();
@@ -159,26 +160,52 @@ QIcon TitleBar::renderSvgIcon(const QString &path, const QSize &size, const QCol
     QPixmap pixmap(size * dpr);
     pixmap.fill(Qt::transparent);
 
-    // 读取 SVG 文件内容
-    QFile file(path);
-    if(!file.open(QIODevice::ReadOnly))
-        return QIcon();
-    QString svgData = file.readAll();
-    file.close();
-    // 替换 currentColor 为实际颜色值
-    svgData.replace("currentColor", color.name(QColor::HexRgb));
+    // 检查文件扩展名
+    QFileInfo fileInfo(path);
+    QString extension = fileInfo.suffix().toLower();
 
-    // SVG渲染
-    QSvgRenderer renderer(svgData.toUtf8());
-    if(renderer.isValid())
+    if(extension == "svg")
     {
-        QPainter painter(&pixmap);
-        //painter.setRenderHint(QPainter::Antialiasing);
-        // 保持比例居中渲染
-        QRectF targetRect(0, 0, size.width() * dpr, size.height() * dpr);
-        renderer.render(&painter, targetRect);
-        painter.end();
+        // SVG 文件处理（支持颜色替换）
+        QFile file(path);
+        if(!file.open(QIODevice::ReadOnly)) return QIcon();
+
+        QString svgData = file.readAll();
+        file.close();
+
+        // 替换 currentColor 为实际颜色值
+        svgData.replace("currentColor", color.name(QColor::HexRgb));
+
+        // SVG渲染
+        QSvgRenderer renderer(svgData.toUtf8());
+        if(renderer.isValid())
+        {
+            QPainter painter(&pixmap);
+            //painter.setRenderHint(QPainter::Antialiasing);
+            // 保持比例居中渲染
+            QRectF targetRect(0, 0, size.width() * dpr, size.height() * dpr);
+            renderer.render(&painter, targetRect);
+            painter.end();
+        }
     }
+    else
+    {
+        // 其他图片格式处理（保持原色）
+        QPixmap originalPixmap(path);
+        if(!originalPixmap.isNull())
+        {
+            QPainter painter(&pixmap);
+            // 平滑缩放
+            QRectF targetRect(0, 0, size.width() * dpr, size.height() * dpr);
+            QRectF sourceRect = originalPixmap.rect();
+
+            painter.setRenderHint(QPainter::SmoothPixmapTransform);
+            painter.drawPixmap(targetRect, originalPixmap, sourceRect);
+            painter.end();
+        }
+    }
+
+
     pixmap.setDevicePixelRatio(dpr);
     return QIcon(pixmap);
 }
@@ -223,32 +250,32 @@ void TitleBar::setIcons()
     if(m_currentTheme == Dark)
     {
         // 暗色主题使用浅色图标
-        m_minIcon = renderSvgIcon(":/res/icon/min.svg", QSize(16, 16), Qt::white);
-        m_maxIcon = renderSvgIcon(":/res/icon/max.svg", QSize(16, 16), Qt::white);
-        m_restoreIcon = renderSvgIcon(":/res/icon/restore.svg", QSize(16, 16), Qt::white);
-        m_closeIcon = renderSvgIcon(":/res/icon/close.svg", QSize(10, 10), Qt::white);
-        m_setIcon = renderSvgIcon(":/res/icon/set.svg", QSize(20, 20), Qt::white);
+        m_minIcon = renderIcon(":/res/icon/min.svg", QSize(16, 16), Qt::white);
+        m_maxIcon = renderIcon(":/res/icon/max.svg", QSize(16, 16), Qt::white);
+        m_restoreIcon = renderIcon(":/res/icon/restore.svg", QSize(16, 16), Qt::white);
+        m_closeIcon = renderIcon(":/res/icon/close.svg", QSize(10, 10), Qt::white);
+        m_setIcon = renderIcon(":/res/icon/set.svg", QSize(20, 20), Qt::white);
 
-        m_minIconInactive = renderSvgIcon(":/res/icon/min.svg", QSize(16, 16), m_inactiveColor);
-        m_maxIconInactive = renderSvgIcon(":/res/icon/max.svg", QSize(16, 16), m_inactiveColor);
-        m_restoreIconInactive = renderSvgIcon(":/res/icon/restore.svg", QSize(16, 16), m_inactiveColor);
-        m_closeIconInactive = renderSvgIcon(":/res/icon/close.svg", QSize(10, 10), m_inactiveColor);
-        m_setIconInactive = renderSvgIcon(":/res/icon/set.svg", QSize(20, 20), m_inactiveColor);
+        m_minIconInactive = renderIcon(":/res/icon/min.svg", QSize(16, 16), m_inactiveColor);
+        m_maxIconInactive = renderIcon(":/res/icon/max.svg", QSize(16, 16), m_inactiveColor);
+        m_restoreIconInactive = renderIcon(":/res/icon/restore.svg", QSize(16, 16), m_inactiveColor);
+        m_closeIconInactive = renderIcon(":/res/icon/close.svg", QSize(10, 10), m_inactiveColor);
+        m_setIconInactive = renderIcon(":/res/icon/set.svg", QSize(20, 20), m_inactiveColor);
     }
     else
     {
         // 亮色主题使用深色图标
-        m_minIcon = renderSvgIcon(":/res/icon/min.svg", QSize(16, 16), Qt::black);
-        m_maxIcon = renderSvgIcon(":/res/icon/max.svg", QSize(16, 16), Qt::black);
-        m_restoreIcon = renderSvgIcon(":/res/icon/restore.svg", QSize(16, 16), Qt::black);
-        m_closeIcon = renderSvgIcon(":/res/icon/close.svg", QSize(10, 10), Qt::black);
-        m_setIcon = renderSvgIcon(":/res/icon/set.svg", QSize(20, 20), Qt::black);
+        m_minIcon = renderIcon(":/res/icon/min.svg", QSize(16, 16), Qt::black);
+        m_maxIcon = renderIcon(":/res/icon/max.svg", QSize(16, 16), Qt::black);
+        m_restoreIcon = renderIcon(":/res/icon/restore.svg", QSize(16, 16), Qt::black);
+        m_closeIcon = renderIcon(":/res/icon/close.svg", QSize(10, 10), Qt::black);
+        m_setIcon = renderIcon(":/res/icon/set.svg", QSize(20, 20), Qt::black);
 
-        m_minIconInactive = renderSvgIcon(":/res/icon/min.svg", QSize(16, 16), m_inactiveColor);
-        m_maxIconInactive = renderSvgIcon(":/res/icon/max.svg", QSize(16, 16), m_inactiveColor);
-        m_restoreIconInactive = renderSvgIcon(":/res/icon/restore.svg", QSize(16, 16), m_inactiveColor);
-        m_closeIconInactive = renderSvgIcon(":/res/icon/close.svg", QSize(10, 10), m_inactiveColor);
-        m_setIconInactive = renderSvgIcon(":/res/icon/set.svg", QSize(20, 20), m_inactiveColor);
+        m_minIconInactive = renderIcon(":/res/icon/min.svg", QSize(16, 16), m_inactiveColor);
+        m_maxIconInactive = renderIcon(":/res/icon/max.svg", QSize(16, 16), m_inactiveColor);
+        m_restoreIconInactive = renderIcon(":/res/icon/restore.svg", QSize(16, 16), m_inactiveColor);
+        m_closeIconInactive = renderIcon(":/res/icon/close.svg", QSize(10, 10), m_inactiveColor);
+        m_setIconInactive = renderIcon(":/res/icon/set.svg", QSize(20, 20), m_inactiveColor);
     }
 }
 
@@ -354,7 +381,7 @@ void TitleBar::setWindowTitle(const QString & name)
 void TitleBar::setWindowIcon(const QString & path)
 {
     QPixmap pix;
-    QIcon icon = renderSvgIcon(path, QSize(20, 20));
+    QIcon icon = renderIcon(path, QSize(20, 20));
     QPixmap pixmap(path);
     if(!icon.isNull()) pixmap = icon.pixmap(m_fixedHeight, m_fixedHeight);
     else pixmap = pixmap.scaled(m_fixedHeight, m_fixedHeight, Qt::KeepAspectRatio, Qt::SmoothTransformation);
@@ -378,9 +405,9 @@ void TitleBar::setTitleBarColor(const QColor &color)
 // 在独立窗口时使用
 void TitleBar::setPinButton(const QString &checkedPath, const QString &uncheckedPath)
 {
-    m_setIcon = renderSvgIcon(uncheckedPath, QSize(20, 20));
-    m_setIconInactive = renderSvgIcon(uncheckedPath, QSize(20, 20), m_inactiveColor);
-    m_setIconChecked = renderSvgIcon(checkedPath, QSize(20, 20));
+    m_setIcon = renderIcon(uncheckedPath, QSize(20, 20));
+    m_setIconInactive = renderIcon(uncheckedPath, QSize(20, 20), m_inactiveColor);
+    m_setIconChecked = renderIcon(checkedPath, QSize(20, 20));
 }
 
 void TitleBar::setPinButtonChecked(bool checked)

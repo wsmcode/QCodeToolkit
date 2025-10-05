@@ -72,8 +72,8 @@ private:
     void initUI();
     // 创建全屏预览透明玻璃窗口
     void createDockingPreview();
-    // svg图片渲染，颜色目前不支持透明通道
-    QIcon renderSvgIcon(const QString& path, const QSize& size, const QColor& color = Qt::black);
+    // 图片渲染，颜色目前不支持透明通道
+    QIcon renderIcon(const QString& path, const QSize& size, const QColor& color = Qt::black);
 
     // 窗口还原
     void showNormal();
