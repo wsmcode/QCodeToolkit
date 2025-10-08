@@ -33,23 +33,15 @@ public:
     bool removeItem(const QString &path, int id);
 
     // == 验证接口 ==
-    bool isRepositoryItem(const QString& destDir);
     bool isProject(const QString& destDir);
-    bool isCategory(const QString& destDir);
     bool hasNameRepetition(const QString& name, const QString& destDir);
     bool isCodeFile(const QString& filePath);
     bool isImageFile(const QString& filePath);
-    bool hasProjectMarker(const QString& destDir);
-    bool hasCategoryMarker(const QString& destDir);
 
     // == 工具接口 ==
     QString autoRename(const QString& name, const QString& path);
     bool renameItem(const QString& newName, const QString& path, int id);
     QString sanitizeFileName(const QString &fileName);
-
-    QString repositoryIdFile() const;
-    QString repositoryIdDir() const;
-    QString repositoryId() const;
 
     // ======== DatabaseManager ========
     DatabaseManager *getDbManager() const;

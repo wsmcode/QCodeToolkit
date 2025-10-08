@@ -87,17 +87,6 @@ void TreeWidget::setupTreeView(const QString& url)
     }
     m_rootPath  = dir.absolutePath(); // 不包含文件名
 
-    // 确保根目录有标识文件
-    if(!m_projectManager->isRepositoryItem(m_rootPath))
-    {
-        QFile file(m_rootPath + "/" + m_projectManager->repositoryId());
-        if(file.open(QIODevice::WriteOnly))
-        {
-            file.write("Code Repository Root Directory");
-            file.close();
-        }
-    }
-
     // 加载目录结构
     // 不创建根节点，直接加载根目录内容作为顶级项
     loadDir(m_rootPath, invisibleRootItem(), m_projectManager->rootNodeId());
@@ -127,31 +116,14 @@ void TreeWidget::onCustomContextMenu(const QPoint &pos)
 //        qDebug() << "path" << path;
         if(type == "FOLDER")
         {
-            if(m_projectManager->hasCategoryMarker(path))
-            {
-                menu.addAction("新建子分类", this, [=](){
-                    m_projectManager->createCategory(path, nodeId);
-                    setupTreeView(m_rootPath);
-                });
-            }
-            else if(m_projectManager->hasProjectMarker(path))
-            {
-                menu.addAction("新建项目", this, [=](){
-                    m_projectManager->createProject(path, nodeId);
-                    setupTreeView(m_rootPath);
-                });
-            }
-            else if(m_projectManager->isRepositoryItem(path))
-            {
-                menu.addAction("新建子分类", this, [=](){
-                    m_projectManager->createCategory(path, nodeId);
-                    setupTreeView(m_rootPath);
-                });
-                menu.addAction("新建项目", this, [=](){
-                    m_projectManager->createProject(path, nodeId);
-                    setupTreeView(m_rootPath);
-                });
-            }
+            menu.addAction("新建子分类", this, [=](){
+                m_projectManager->createCategory(path, nodeId);
+                setupTreeView(m_rootPath);
+            });
+            menu.addAction("新建项目", this, [=](){
+                m_projectManager->createProject(path, nodeId);
+                setupTreeView(m_rootPath);
+            });
         }
         else if(type == "PROJECT_FOLDER")
         {
@@ -486,11 +458,6 @@ void TreeWidget::loadDir(const QString &path, QTreeWidgetItem *parentItem, int p
     if(m_isLoadDir) return;
     m_isLoadDir = true;
 
-    if(!m_projectManager->isRepositoryItem(path))
-    {
-        qWarning() << "It is not the repository directory: " << path;
-        return;
-    }
     QDir dir(path);
     if(!dir.exists()) return;
 

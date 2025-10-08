@@ -181,19 +181,9 @@ bool ProjectManager::removeItem(const QString &path, int id)
     return true;
 }
 
-bool ProjectManager::isRepositoryItem(const QString &destDir)
-{
-    return m_fileManager->isRepositoryItem(destDir);
-}
-
 bool ProjectManager::isProject(const QString &destDir)
 {
     return m_fileManager->isProject(destDir);
-}
-
-bool ProjectManager::isCategory(const QString &destDir)
-{
-    return m_fileManager->isCategory(destDir);
 }
 
 bool ProjectManager::hasNameRepetition(const QString &name, const QString &destDir)
@@ -209,16 +199,6 @@ bool ProjectManager::isCodeFile(const QString &filePath)
 bool ProjectManager::isImageFile(const QString &filePath)
 {
     return m_fileManager->isImageFile(filePath);
-}
-
-bool ProjectManager::hasProjectMarker(const QString &destDir)
-{
-    return m_fileManager->hasProjectMarker(destDir);
-}
-
-bool ProjectManager::hasCategoryMarker(const QString &destDir)
-{
-    return m_fileManager->hasCategoryMarker(destDir);
 }
 
 QString ProjectManager::autoRename(const QString &name, const QString &path)
@@ -251,21 +231,6 @@ bool ProjectManager::renameItem(const QString &newName, const QString &path, int
 QString ProjectManager::sanitizeFileName(const QString &fileName)
 {
     return m_fileManager->sanitizeFileName(fileName);
-}
-
-QString ProjectManager::repositoryIdFile() const
-{
-    return m_fileManager->REPO_ID_FILE;
-}
-
-QString ProjectManager::repositoryIdDir() const
-{
-    return m_fileManager->REPO_ID_DIR;
-}
-
-QString ProjectManager::repositoryId() const
-{
-    return m_fileManager->REPO_ID;
 }
 
 DatabaseManager *ProjectManager::getDbManager() const
