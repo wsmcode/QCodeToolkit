@@ -34,13 +34,11 @@ public:
 
     // == 验证接口 ==
     bool isProject(const QString& destDir);
-    bool hasNameRepetition(const QString& name, const QString& destDir);
     bool isCodeFile(const QString& filePath);
     bool isImageFile(const QString& filePath);
 
     // == 工具接口 ==
-    QString autoRename(const QString& name, const QString& path);
-    bool renameItem(const QString& newName, const QString& path, int id);
+    QString rename(const QString& newName, const QString& path, int id);
     QString sanitizeFileName(const QString &fileName);
 
     // ======== DatabaseManager ========

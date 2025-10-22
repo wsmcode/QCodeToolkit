@@ -73,9 +73,19 @@ private:
 
     ProjectManager *m_projectManager;
 
-    bool m_isOnItemChanged = false;
     bool m_isLoadDir = false;
     bool m_isRefreshing = false;
+    bool m_isItemChanging = false;
+
+private:
+    class Guard
+    {
+    public:
+        explicit Guard(bool &flag) : m_flag(flag) { m_flag = true; }
+        ~Guard() { m_flag = false; }
+    private:
+        bool &m_flag;
+    };
 };
 
 #endif // TREEWIDGET_H

@@ -112,8 +112,6 @@ void TreeWidget::onCustomContextMenu(const QPoint &pos)
         QString type = item->data(0, Qt::UserRole + 1).toString();
         int nodeId = item->data(0, Qt::UserRole + 3).toInt(); // 获取节点ID
 
-//        qDebug() << "type" << type;
-//        qDebug() << "path" << path;
         if(type == "FOLDER")
         {
             menu.addAction("新建子分类", this, [=](){
@@ -161,9 +159,8 @@ void TreeWidget::onCustomContextMenu(const QPoint &pos)
 void TreeWidget::onItemChanged(QTreeWidgetItem *item, int column)
 {
     if(column != 0) return;
-
-    if(m_isOnItemChanged) return;
-    m_isOnItemChanged = true;
+    if(m_isItemChanging) return;
+    Guard guard(m_isItemChanging);
 
     QString newName = item->text(0);
     QString oldName = item->data(0, Qt::UserRole + 2).toString();
@@ -173,56 +170,41 @@ void TreeWidget::onItemChanged(QTreeWidgetItem *item, int column)
     QString parentPath = QFileInfo(path).path();
     if(!oldName.isEmpty() && newName != oldName)
     {
-        QString sanitizedName = m_projectManager->sanitizeFileName(newName);
-        if(sanitizedName != newName)
-        {
-            item->setText(0, sanitizedName);
-            newName = sanitizedName;
-        }
-
         if(newName.isEmpty())
         {
             item->setText(0, oldName);
-            m_isOnItemChanged = false;
             return;
         }
-
-        newName = m_projectManager->autoRename(newName, parentPath);
 
         if(newName == oldName)
         {
-            m_isOnItemChanged = false;
             return;
         }
 
-        // 计算新的完整路径
-        QString newPath = parentPath + "/" + newName;
-
-        // 先更新数据，再执行重命名操作
-        item->setData(0, Qt::UserRole, newPath);
-        item->setData(0, Qt::UserRole + 2, newName);
-
         // 文件重命名
-        bool renameSuccess = m_projectManager->renameItem(newName, path, nodeId);
+        newName = m_projectManager->rename(newName, path, nodeId);
 
-        if(!renameSuccess)
+        if(!newName.isEmpty())
+        {
+            // 更新数据
+            QString newPath = parentPath + "/" + newName;
+
+            item->setData(0, Qt::UserRole, newPath);
+            item->setData(0, Qt::UserRole + 2, newName);
+            // 临时断开信号，避免刷新时再次触发
+            QSignalBlocker blocker(this);
+            // 刷新当前项目
+            if(QTreeWidgetItem* parent = item->parent()) refreshItem(parent);
+            else setupTreeView(m_rootPath);
+        }
+        else
         {
             // 如果重命名失败，恢复原来的数据
             item->setText(0, oldName);
             item->setData(0, Qt::UserRole, path);
             item->setData(0, Qt::UserRole + 2, oldName);
-            m_isOnItemChanged = false;
-            return;
-        }
-        else
-        {
-            // 刷新当前项目
-            if(QTreeWidgetItem* parent = item->parent()) refreshItem(parent);
-            else setupTreeView(m_rootPath);
         }
     }
-
-    m_isOnItemChanged = false;
 }
 
 void TreeWidget::onItemExpanded(QTreeWidgetItem *item)
@@ -245,7 +227,7 @@ void TreeWidget::onItemExpanded(QTreeWidgetItem *item)
 void TreeWidget::refreshItem(QTreeWidgetItem *item)
 {
     if(!item || m_isRefreshing) return;
-    m_isRefreshing = true;
+    Guard guard(m_isRefreshing);
 
     QString path = item->data(0, Qt::UserRole).toString();
     int nodeId = item->data(0, Qt::UserRole + 3).toInt();
@@ -266,7 +248,6 @@ void TreeWidget::refreshItem(QTreeWidgetItem *item)
 
     // 恢复展开状态
     if(wasExpanded) item->setExpanded(true);
-    m_isRefreshing = false;
 }
 
 void TreeWidget::onSetDemoImage()

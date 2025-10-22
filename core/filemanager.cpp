@@ -90,12 +90,6 @@ bool FileManager::removeItem(const QString &path)
     return removeRecursively(path);
 }
 
-// 判断是否命名重复
-bool FileManager::hasNameRepetition(const QString &name, const QString& destDir)
-{
-    return QDir(destDir).exists(name);
-}
-
 // 判断是否是代码文件
 bool FileManager::isCodeFile(const QString &filePath)
 {
@@ -147,85 +141,92 @@ bool FileManager::isProject(const QString &path)
 }
 
 // 检测命名重复，自动重命名
-QString FileManager::autoRename(const QString &name, const QString &path)
+QString FileManager::autoRename(const QString &name, const QString &parentDir)
 {
     // 进行合法性检查
     QString sanitizedName = sanitizeFileName(name);
     if(sanitizedName.isEmpty()) return "";
 
-    QDir dir(path);
-    QString base = sanitizedName;
+    QDir dir(parentDir);
+    if(!dir.exists())
+    {
+        qWarning() << "Parent directory does not exist:" << parentDir;
+        return "";
+    }
+
+    // 通过文件名的后缀判断是文件还是目录
+    bool isDirectory = QFileInfo(sanitizedName).suffix().isEmpty();
+
+    QString base, suffix;
+    if(isDirectory) base = sanitizedName;
+    else
+    {
+        QFileInfo nameInfo(sanitizedName);
+        base = nameInfo.completeBaseName();
+        suffix = nameInfo.suffix();
+        if(!suffix.isEmpty()) suffix = "." + suffix;
+    }
+
     QString newName = sanitizedName;
     int count = 0;
 
     while(dir.exists(newName))
     {
         count++;
-        // 目录
-        if(QDir(path + "/" + newName).exists())
+        if(isDirectory) // 目录
         {
             newName = QString("%1%2").arg(base).arg(count);
         }
         else // 文件
         {
-            QFileInfo info(newName);
-            QString fileBase = info.completeBaseName();
-            QString suffix = info.suffix();
-            newName = QString("%1%2%3").arg(fileBase).arg(count).arg(suffix.isEmpty() ? "" : "." + suffix);
+            newName = QString("%1%2%3").arg(base).arg(count).arg(suffix);
         }
     }
 
     return newName;
 }
 
-bool FileManager::renameItem(const QString &newName, const QString &path)
+QString FileManager::rename(const QString &newName, const QString &path)
 {
     // 进行合法性检查
     QString sanitizedName = sanitizeFileName(newName);
-    if(sanitizedName.isEmpty()) return false;
+    if(sanitizedName.isEmpty()) return "";
+
     // 获取原始路径的 QFileInfo
     QFileInfo fileInfo(path);
-
-    // 检查路径是否存在且是目录
-    if (!fileInfo.exists() || !fileInfo.isDir())
+    if (!fileInfo.exists())
     {
         qWarning() << "The path does not exist or is not a directory" + path;
-        return false;
+        return "";
     }
+
+    if(fileInfo.fileName() == sanitizedName) return "";
 
     // 获取父目录
     QDir parentDir = fileInfo.dir();
-
-    // 构建新路径
-    QString newPath = parentDir.filePath(sanitizedName);
-
-    // 检查新路径是否已存在
-    if (QFileInfo::exists(newPath))
+    // 最终可用名称
+    QString finalName = autoRename(sanitizedName, parentDir.absolutePath());
+    if(finalName.isEmpty())
     {
-        qWarning() << "The destPath already exists" + newPath;
-        return false;
+        qWarning() << "Failed to generate valid name for renaming";
+        return "";
     }
-    // 重命名项目文件/分类目录
+
+    // 重命名
+    if(!parentDir.rename(fileInfo.fileName(), sanitizedName))
+    {
+        qWarning() << "Failed to rename project:" << path << "to" << sanitizedName;
+        return "";
+    }
+
+    // 重命名项目文件
     if(isProject(path))
     {
-        if(!parentDir.rename(fileInfo.fileName(), sanitizedName))
-        {
-            qWarning() << "Failed to rename project:" << path << "to" << sanitizedName;
-            return false;
-        }
+        QString newPath = parentDir.filePath(finalName);
         emit createMetaCtk(newPath + "/meta.ctk", sanitizedName);
-
-    }
-    else
-    {
-        if(!parentDir.rename(fileInfo.fileName(), sanitizedName))
-        {
-            qWarning() << "Failed to rename item:" << path << "to" << sanitizedName;
-            return false;
-        }
     }
 
-    return true;
+    return finalName;
 
 }
 

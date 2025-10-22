@@ -49,27 +49,20 @@ public:
     FileManager(const FileManager&) = delete;
     FileManager& operator=(const FileManager&) = delete;
 
-    // ======== 核心操作接口 ========
+    // ======== 项目操作接口 ========
     QString createProject(const QString& destDir);
     QString createCategory(const QString& destDir);
     bool removeItem(const QString &path);
 
     // ======== 验证接口 ========
-    bool hasNameRepetition(const QString& name, const QString& destDir);
     bool isCodeFile(const QString& filePath);
     bool isImageFile(const QString& filePath);
 
     // ======== 工具接口 ========
     bool isProject(const QString &path);
-    QString autoRename(const QString& name, const QString& path);
-    bool renameItem(const QString& newName, const QString& path);
+    QString rename(const QString& newName, const QString& path);
     QString sanitizeFileName(const QString &fileName);
 
-    // ======== 查询接口 ========（用到再写）
-    // 查询项目文件信息：文件大小，内有文件数量
-    //QVariantMap getProjectFileInfo(const QString& filePath);
-    // 查询分类目录信息：内有部是分类目录还是项目文件，数量，大小
-    //QVariantMap getClassifyDirInfo(const QString &folderPath);
 signals:
     void fileImported(const QString& resourcePath, const QString& configPath);
     void createMetaCtk(const QString &configPath, const QString &name);
@@ -78,6 +71,7 @@ private:
     explicit FileManager(QObject *parent = nullptr);
 
     bool removeRecursively(const QString &path);    // 递归删除实现
+    QString autoRename(const QString& name, const QString& parentDir);
 
     // 默认命名配置
     QString m_defaultFileName = "untitle";

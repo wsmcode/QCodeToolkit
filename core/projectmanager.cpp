@@ -185,12 +185,6 @@ bool ProjectManager::isProject(const QString &destDir)
 {
     return m_fileManager->isProject(destDir);
 }
-
-bool ProjectManager::hasNameRepetition(const QString &name, const QString &destDir)
-{
-    return m_fileManager->hasNameRepetition(name, destDir);
-}
-
 bool ProjectManager::isCodeFile(const QString &filePath)
 {
     return m_fileManager->isCodeFile(filePath);
@@ -201,22 +195,18 @@ bool ProjectManager::isImageFile(const QString &filePath)
     return m_fileManager->isImageFile(filePath);
 }
 
-QString ProjectManager::autoRename(const QString &name, const QString &path)
+QString ProjectManager::rename(const QString &newName, const QString &path, int id)
 {
-    return m_fileManager->autoRename(name, path);
-}
-
-bool ProjectManager::renameItem(const QString &newName, const QString &path, int id)
-{
-    if(!m_fileManager->renameItem(newName, path)) return false;
+    QString finalName = m_fileManager->rename(newName, path);
+    if(finalName.isEmpty()) return "";
     Node node = m_dbManager->node(id);
-    node.name = newName;
+    node.name = finalName;
     m_dbManager->updateNode(node);
     Note note = m_dbManager->note(id);
-    qDebug() << "new name" << newName;
+    qDebug() << "new name" << finalName;
     if(!note.isEmpty())
     {
-        note.projectName = newName;
+        note.projectName = finalName;
         qDebug() << "note projectName" << note.projectName;
         m_dbManager->updateNote(note);
     }
@@ -225,7 +215,7 @@ bool ProjectManager::renameItem(const QString &newName, const QString &path, int
     qDebug() << "note projectName" << note.projectName;
 
     emit projectListChanged();
-    return true;
+    return finalName;
 }
 
 QString ProjectManager::sanitizeFileName(const QString &fileName)
